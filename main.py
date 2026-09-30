@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app.collectors import sources
+from config.db import Db
 
 import argparse
 import yaml
@@ -27,6 +28,8 @@ def main(argv=None) -> None:
 
     args = parser.parse_args(argv)
     config = load_config(Path(args.config))
+
+    db = Db()
 
     if args.cmd == "scan":
         with open("out.txt", "w") as f:

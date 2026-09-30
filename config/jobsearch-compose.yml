@@ -1,0 +1,16 @@
+services:
+  jobsearch_db:
+    container_name: jobsearch_container
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: jobsearch
+      POSTGRES_PASSWORD: TROUBADOR!
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/jobsearch
+
+volumes:
+  pgdata:
