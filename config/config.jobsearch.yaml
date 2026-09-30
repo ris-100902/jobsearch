@@ -1,0 +1,6 @@
+# ---- Companies you are watching ----
+# board: greenhouse | ashby | oracle
+# board_token: company handle on that board
+companies:
+  - { name: 'Stripe', board: 'greenhouse', board_token: 'stripe', domain: stripe.com }
+  - { name: 'Notion', board: ashby, board_token: 'notion', domain: notion.so }
