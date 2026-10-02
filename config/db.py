@@ -11,10 +11,10 @@ CREATE_TABLE = '''
     url         TEXT,
     location    TEXT,
     source      TEXT,
-    posted_at   REAL,
-    first_seen  REAL NOT NULL,
-    last_seen   REAL NOT NULL,
-    closed_at   REAL,
+    posted_at   DOUBLE PRECISION,
+    first_seen  DOUBLE PRECISION NOT NULL,
+    last_seen   DOUBLE PRECISION NOT NULL,
+    closed_at   DOUBLE PRECISION,
     score       INTEGER,
     reason      TEXT,
     notified    BOOLEAN,
@@ -57,3 +57,20 @@ class Db:
                 new.append(j)
         self.db.commit()
         return new
+
+    def mark_closed(self, companies: list[str]) -> list[str]:
+        "A job that stopped appearing on latest scans is marked as closed"
+        if not companies:
+            return []
+        
+        markers = ",".join(["%s"] * len(companies))
+        rows = self.db.execute(
+            f"""SELECT * FROM jobs WHERE COMPANY IN ({markers})
+                AND closed_at IS NULL AND last_seen< %s""",
+            (*companies, self.last_insert_ts)
+        ).fetchall()
+
+        for r in rows:
+            self.db.execute("UPDATE jobs SET closed_at= %s WHERE id = %s", (self.last_insert_ts, r[0]))
+        self.db.commit()
+        return rows

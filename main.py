@@ -16,14 +16,19 @@ def load_config(path: Path) -> dict:
 def job_scan(config: dict, db: Db) -> dict:
     all_jobs: list[dict] = []
     errors: list[str] = []
+    live_companies: list[str] = []
     for entry in config.get('companies'):
         jobs, err = sources.fetch_company(entry)
         if err:
             errors.append(f"{entry['name']}: {err}")
         else:
+            live_companies.append(entry["name"])
             all_jobs.extend(jobs)
     
-    db.insert_jobs(all_jobs)
+    # New companies are inserted
+    new = db.insert_jobs(all_jobs)
+    # Takes company as parameter & updates closed_at of jobs no longer available
+    closed = db.mark_closed(live_companies)
     return {'jobs': all_jobs, 'errors': errors}
 
 def main(argv=None) -> None:
