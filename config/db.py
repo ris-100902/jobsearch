@@ -1,4 +1,6 @@
 import psycopg
+import time
+
 from psycopg import Error
 
 CREATE_TABLE = '''
@@ -33,5 +35,25 @@ class Db:
         cursor = self.db.cursor()
         cursor.execute(CREATE_TABLE)
         self.db.commit()
-        cursor.close()
-        self.db.close()
+        self.last_insert_ts = time.time()
+
+    def insert_jobs(self, jobs: list[dict]) -> list[dict]:
+        "Insert jobs, returning only the new ones"
+        now = time.time()
+        self.last_insert_ts = now
+        new = []
+        for j in jobs:
+            row = self.db.execute("SELECT id FROM jobs WHERE id = %s", (j["id"],)).fetchone()
+            if row:
+                self.db.execute("UPDATE jobs SET last_seen = %s, closed_at = NULL WHERE id = %s", (now, j["id"],))
+            else:
+                self.db.execute(
+                    """INSERT INTO jobs(id, company, title, url, location, source,
+                        posted_at, first_seen, last_seen, domain, description)
+                                VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (j["id"], j["company"], j["title"], j["url"], j["location"],
+                    j["source"], j["posted_at"], now, now, j["domain"], j["description"][:1500])
+                )
+                new.append(j)
+        self.db.commit()
+        return new
